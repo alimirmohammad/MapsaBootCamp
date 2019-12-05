@@ -3,7 +3,7 @@ import time
 import sys
 import threading
 
-IP = 'localhost'
+IP = '192.168.1.117'
 PORT = 8216
 username = input("Enter your name: ")
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
