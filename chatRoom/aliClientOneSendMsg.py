@@ -19,7 +19,7 @@ def send_message():
     while True:
         msg = input()
         if msg:
-            client_socket.send(bytes(username + "->" + msg, 'utf-8'))
+            client_socket.send(bytes(msg, 'utf-8'))
 
 t1 = threading.Thread(target=send_message)
 t1.start()

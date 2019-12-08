@@ -10,7 +10,6 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((IP, PORT))
 client_socket.setblocking(0)
 
-
 def send_message():
     while True:
         msg = input()
