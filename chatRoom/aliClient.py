@@ -4,12 +4,14 @@ import sys
 import threading
 
 IP = '192.168.0.103'
-PORT = 1268
+PORT = 1244
 username = input("Welcome! Please enter your username: ")
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((IP, PORT))
 
 client_socket.send(bytes(username, 'utf-8'))
+contact = input("Who do you want to chat with? ")
+client_socket.send(bytes(contact, 'utf-8'))
 client_socket.setblocking(0)
 
 

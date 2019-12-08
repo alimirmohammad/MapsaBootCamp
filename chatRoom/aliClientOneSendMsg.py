@@ -3,19 +3,23 @@ import time
 import sys
 import threading
 
-IP = '192.168.0.95'
-PORT = 5705
-username = input("Enter your name: ")
+IP = '192.168.0.103'
+PORT = 1244
+username = input("Welcome! Please enter your username: ")
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((IP, PORT))
+
+client_socket.send(bytes(username, 'utf-8'))
+contact = input("Who do you want to chat with? ")
+client_socket.send(bytes(contact, 'utf-8'))
 client_socket.setblocking(0)
+
 
 def send_message():
     while True:
         msg = input()
         if msg:
-            client_socket.send(bytes(username + "->" + msg, 'utf-8'))
-
+            client_socket.send(bytes(msg, 'utf-8'))
 
 t1 = threading.Thread(target=send_message)
 t1.start()
@@ -39,4 +43,4 @@ while True:
     except IOError as e:
         pass
 
-#    time.sleep(5)
+    time.sleep(5)

@@ -4,7 +4,7 @@ import select
 import threading
 
 IP = ''
-PORT = 1268
+PORT = 1244
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -40,6 +40,9 @@ while True:
                 print('username: ', userName)
                 clients[client_socket][1] = userName
                 clients[client_socket][2] = 'online'
+                client_socket.send(bytes('Contact: ', 'utf-8'))
+                contact = client_socket.recv(1024).decode('utf-8')
+                if clients[client_socket]
                 # clients['username'] = userName
                 print(clients)
                 print("Connection Established from {}".format(address))
