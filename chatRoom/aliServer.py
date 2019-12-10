@@ -4,10 +4,10 @@ import select
 import threading
 
 IP = ''
-PORT = 1244
+PORT = 1246
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server_socket.bind((IP, PORT))
 
 server_socket.listen(10)
@@ -17,8 +17,42 @@ socket_list = [server_socket]
 
 clients = {}
 
-def recUsername(s):
-    return s.recv(1024)
+def check_contact(client_socket, userName, clients):
+    while True:
+        client_socket.send(bytes("Who do you want to chat with? ", 'utf-8'))
+        contact_name = client_socket.recv(1024).decode('utf-8')
+        for socket_object in clients:
+            if clients[socket_object]["username"] == contact_name:
+                contact_socket = socket_object
+                break
+        else:
+            client_socket.send(bytes("This username does not exist!\n", 'utf-8'))
+            # print('This username does not exist!')
+            continue
+
+        if clients[contact_socket]["status"] == 'offline':
+            client_socket.send(bytes("This user is offline!\n", 'utf-8'))
+            # print('This user is offline!')
+            continue
+        # elif clients[contact_socket]["status"] == 'busy':
+        #     client_socket.send(bytes("This user is busy!\n", 'utf-8'))
+        #     # print('This user is busy!')
+        #     continue
+        else:
+            # return contact_name, contact_socket
+            clients[client_socket]["contact_name"] = contact_name
+            clients[client_socket]["contact_socket"] = contact_socket
+            clients[contact_socket]["contact_name"] = userName
+            clients[contact_socket]["contact_socket"] = client_socket
+            client_socket.send(bytes(f'You are in PV with {contact_name}', 'utf-8'))
+            contact_socket.send(bytes(f'You are in PV with {userName}', 'utf-8'))
+            clients[client_socket]["status"] = 'busy'
+            clients[contact_socket]["status"] = 'busy'
+            break
+        # else:
+        #     client_socket.send(bytes("This user is busy!\n", 'utf-8'))
+        #     print('This user is busy!')
+        #     continue
 
 while True:
     read_socket, write_socket, exception_socket = select.select(
@@ -28,42 +62,45 @@ while True:
             client_socket, address = server_socket.accept()
 
             if client_socket:
-                # client_socket.send(bytes("Welcome! Please enter your username: ", 'utf-8'))
+                client_socket.send(bytes("Welcome! Please enter your username: ", 'utf-8'))
+                userName = client_socket.recv(1024).decode('utf-8')
                 socket_list.append(client_socket)
-                ip = address[0]
-                clients[client_socket] = [None, None, None]
-                clients[client_socket][0] = ip
-
+                clients[client_socket] = {}
                 # t1 = threading.Thread(target=recUsername, args=[s])
                 # userName = t1.start()
-                userName = client_socket.recv(1024).decode('utf-8')
-                print('username: ', userName)
-                clients[client_socket][1] = userName
-                clients[client_socket][2] = 'online'
-                client_socket.send(bytes('Contact: ', 'utf-8'))
-                contact = client_socket.recv(1024).decode('utf-8')
-                if clients[client_socket]
+                
+                print(f'{userName} is connected!')
+                clients[client_socket]["username"] = userName
+                clients[client_socket]["status"] = 'online'
+                t = threading.Thread(target = check_contact, args = (client_socket, userName, clients))
+                t.start()
+                # contact_name, contact_socket = check_contact()
+                # clients[client_socket]["contact_name"] = contact_name
+                # clients[client_socket]["contact_socket"] = contact_socket
+                # clients[client_socket]["status"] = 'busy'
+                # if clients[client_socket]:
                 # clients['username'] = userName
-                print(clients)
-                print("Connection Established from {}".format(address))
+                # print(clients)
+                # print("Connection Established from {}".format(address))
                 for client_sockets in clients:
                     if client_sockets != client_socket:
                         client_sockets.send(
                             bytes("{} joined Group!".format(userName), 'utf-8'))
 
         else:
-            message = s.recv(1024)
+            message = s.recv(1024).decode('utf-8')
             if not message:
                 socket_list.remove(s)
-                del clients[s]
+                clients[client_socket]["status"] = 'offline'
                 continue
+            else:
+                clients[client_socket]["contact_socket"].send(bytes(clients[client_socket]["username"] + "->" + message, 'utf-8'))
+
           #  print(message.decode('utf-8'))
-            for client_socket in clients:
-                if client_socket != s:
-                    client_socket.send(message)
+            
     for s in exception_socket:
         socket_list.remove(s)
-        del clients[s]
+        clients[client_socket]["status"] = 'offline'
     time.sleep(5)
     # print(socket_list)
 server_socket.close()
