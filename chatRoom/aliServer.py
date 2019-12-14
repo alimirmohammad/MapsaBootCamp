@@ -42,13 +42,21 @@ def check_contact(client_socket, userName, clients):
             # return contact_name, contact_socket
             clients[client_socket]["contact_name"] = contact_name
             clients[client_socket]["contact_socket"] = contact_socket
-            clients[contact_socket]["contact_name"] = userName
-            clients[contact_socket]["contact_socket"] = client_socket
-            client_socket.send(bytes(f'You are in PV with {contact_name}', 'utf-8'))
-            contact_socket.send(bytes(f'You are in PV with {userName}', 'utf-8'))
+            
+            # client_socket.send(bytes(f'You are in PV with {contact_name}', 'utf-8'))
+            while True:
+                contact_socket.send(bytes(f'{userName} wants to chat with you!\nplease enter {userName}', 'utf-8'))
+                temp_name = contact_socket.recv(1024).decode('utf-8')
+                if temp_name == userName:
+                    clients[contact_socket]["contact_name"] = userName
+                    clients[contact_socket]["contact_socket"] = client_socket
+                    break
+
             clients[client_socket]["status"] = 'busy'
             clients[contact_socket]["status"] = 'busy'
             break
+        print('===========Thread Script================')
+        print(clients)
         # else:
         #     client_socket.send(bytes("This user is busy!\n", 'utf-8'))
         #     print('This user is busy!')
@@ -74,6 +82,9 @@ while True:
                 clients[client_socket]["status"] = 'online'
                 t = threading.Thread(target = check_contact, args = (client_socket, userName, clients))
                 t.start()
+                print('===========Main Script================')
+                print(clients)
+                socket_list.append(client_socket)
                 # contact_name, contact_socket = check_contact()
                 # clients[client_socket]["contact_name"] = contact_name
                 # clients[client_socket]["contact_socket"] = contact_socket
@@ -94,13 +105,15 @@ while True:
                 clients[client_socket]["status"] = 'offline'
                 continue
             else:
-                clients[client_socket]["contact_socket"].send(bytes(clients[client_socket]["username"] + "->" + message, 'utf-8'))
+                clients[client_socket]["contact_socket"].send(bytes(message, 'utf-8'))
+                print('====================Message=======================')
+                print(clients)
 
           #  print(message.decode('utf-8'))
             
     for s in exception_socket:
         socket_list.remove(s)
         clients[client_socket]["status"] = 'offline'
-    time.sleep(5)
+    time.sleep(2)
     # print(socket_list)
 server_socket.close()
